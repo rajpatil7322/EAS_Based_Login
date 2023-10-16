@@ -6,9 +6,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "ethers": "^5.7.0",
+    "graphql": "^16.8.1",
     "next": "latest",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "urql": "^4.0.5"
   },
   "engines": {
     "node": ">=18"

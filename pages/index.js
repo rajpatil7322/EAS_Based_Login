@@ -1,131 +1,93 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 
+import { createClient, cacheExchange, fetchExchange } from '@urql/core'
+import {ethers} from 'ethers';
+import { useState } from 'react';
+import {abi} from './abi';
+
 export default function Home() {
+
+  const [address,setAddress]=useState();
+  const [contract,setContract]=useState();
+  const [message,setMessage]=useState();
+
+const APIURL = 'https://api.studio.thegraph.com/query/55595/eas/v0.0.1'
+
+const EAS_Contract_Address="0xC2679fBD37d54388Ce493F1DB75320D236e1815e";
+
+const tokensQuery = `
+  query {
+    attesteds(where:{
+      recipient:"${address}"
+      attester:"0xbc3b2e60738fdc3461c841ede55e81401a54119f"
+    }) {
+      id
+      recipient
+      attester
+      uid
+      transactionHash
+    }
+  }
+`
+
+const client = createClient({
+  url: APIURL,
+  exchanges: [cacheExchange, fetchExchange],
+})
+
+async function getData(){
+  if(address!=""){
+    const data = await client.query(tokensQuery).toPromise()
+    // console.log(data.data.attesteds[0].uid);
+    const attestation_data=await contract.getAttestation(data.data.attesteds[0].uid);
+    // console.log(attestation_data.data);
+    const permission=ethers.utils.defaultAbiCoder.decode(['bool'],attestation_data.data);
+    if(permission){
+      console.log('Welcome');
+      setMessage("Welcome!!!!");
+    }else{
+      console.log("You are not permitted")
+      setMessage("You are not permitted")
+    }
+  }else{
+    alert("Please connect wallet")
+  }
+}
+
+async function Connect(){
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  await provider.send("eth_requestAccounts", []);
+  const signer = provider.getSigner()
+  console.log(await signer.getAddress());
+  setAddress(await signer.getAddress());
+  const contract=new ethers.Contract(EAS_Contract_Address,abi,provider);
+  setContract(contract);
+}
+
+async function Login(){
+  getData();
+}
+
+
   return (
     <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className={styles.logo} />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        footer img {
-          margin-left: 0.5rem;
-        }
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-decoration: none;
-          color: inherit;
-        }
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family:
-            Menlo,
-            Monaco,
-            Lucida Console,
-            Liberation Mono,
-            DejaVu Sans Mono,
-            Bitstream Vera Sans Mono,
-            Courier New,
-            monospace;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family:
-            -apple-system,
-            BlinkMacSystemFont,
-            Segoe UI,
-            Roboto,
-            Oxygen,
-            Ubuntu,
-            Cantarell,
-            Fira Sans,
-            Droid Sans,
-            Helvetica Neue,
-            sans-serif;
-        }
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
+      <div>
+        <h1>EAS Enabled Login</h1>
+      </div>
+      <div>
+      <button onClick={Connect}>Connect Wallet</button>
+      </div>
+      <br>
+      </br>
+     <div>
+     <button onClick={Login}>Login</button>
+     </div>
+     <br>
+     </br>
+      <div>
+        <h1>{message}</h1>
+      </div>
     </div>
   );
 }
