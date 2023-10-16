@@ -1,2 +1,2 @@
-EAS based Login Flow /
-Attestation based login using ethereum attestation service contract data which is indexed using grapql
+EAS based Login Flow.
+Attestationbased login using Ethereum attestation service contract data which is indexed using Graphql
